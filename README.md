@@ -1,11 +1,13 @@
 # ⚽ World Cup 2026 Predictor
 
-<img width="1274" height="754" alt="Screenshot 2026-07-15 at 10 01 48 pm" src="https://github.com/user-attachments/assets/5fdb5220-0d9a-4401-b252-2f2a3d34703e" />
-A fun, single-page web app that lets you pick two nations and watch them battle it out in a physics-based mini football match. The winner is your World Cup 2026 prediction — decided entirely by marble-style ball physics and a rotating goal.
-
 ![World Cup 2026 Predictor](https://img.shields.io/badge/World%20Cup-2026-gold?style=flat-square)
 ![HTML5](https://img.shields.io/badge/HTML5-Canvas-orange?style=flat-square)
 ![No dependencies](https://img.shields.io/badge/dependencies-none-brightgreen?style=flat-square)
+
+<img width="1274" height="754" alt="Screenshot 2026-07-15 at 10 01 48 pm" src="https://github.com/user-attachments/assets/5fdb5220-0d9a-4401-b252-2f2a3d34703e" />
+
+A fun, single-page web app that lets you pick two nations and watch them battle it out in a physics-based mini football match. The winner is your World Cup 2026 prediction — decided entirely by marble-style ball physics and a rotating goal.
+
 
 ## Demo
 
