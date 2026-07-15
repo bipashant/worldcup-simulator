@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚽ World Cup 2026 Predictor</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #ffd700;
+      --gold-dim: #cc9900;
+      --red: #ff5f5f;
+      --blue: #5fa8ff;
+      --green-dark: #0d2a15;
+      --green-mid: #1a4a2a;
+      --green-light: #2d7a4a;
+      --white: #f0f4f8;
+    }
+
+    body {
+      background: #0a0f14;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: var(--white);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── SCREENS ─────────────────────────────────── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .screen.active { animation: fadeUp .4s ease both; }
+
+    /* ─── SCREEN 1 — SELECTION ────────────────────── */
+    #s-pick {
+      background: radial-gradient(ellipse at 50% 0%, #1f4a2c 0%, #0a0f14 70%);
+      padding: 32px 20px 40px;
+    }
+
+    .page-title {
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      font-weight: 900;
+      text-align: center;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--gold) 0%, #ff9c00 60%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    .page-sub {
+      text-align: center;
+      color: #7a9080;
+      font-size: .9rem;
+      margin-bottom: 28px;
+    }
+
+    .pick-layout {
+      display: grid;
+      grid-template-columns: 190px 1fr 190px;
+      gap: 16px;
+      width: 100%;
+      max-width: 980px;
+    }
+
+    .team-panel {
+      background: rgba(255,255,255,.04);
+      border: 2px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .team-panel.t1 { border-color: rgba(255,95,95,.35); }
+    .team-panel.t2 { border-color: rgba(95,168,255,.35); }
+
+    .team-panel label {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #778;
+    }
+
+    .panel-flag {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.06);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+    }
+    .panel-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .panel-name {
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+      color: #dde;
+    }
+
+    .vs-tag {
+      margin-top: auto;
+      font-size: .75rem;
+      color: #444;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    /* Country picker */
+    .picker-panel {
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pick-instruction {
+      text-align: center;
+      font-size: .82rem;
+      color: #778;
+    }
+    .pick-instruction strong { color: var(--gold); }
+
+    .search-wrap {
+      position: relative;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      opacity: .4;
+      pointer-events: none;
+    }
+    #search {
+      width: 100%;
+      padding: 9px 14px 9px 36px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 24px;
+      color: white;
+      font-size: .9rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    #search::placeholder { color: #556; }
+    #search:focus { border-color: var(--gold); }
+
+    .country-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: 7px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 2px 2px 4px;
+    }
+    .country-grid::-webkit-scrollbar { width: 4px; }
+    .country-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 4px; }
+
+    .c-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 4px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: rgba(255,255,255,.04);
+      transition: all .18s ease;
+    }
+    .c-card:hover {
+      background: rgba(255,255,255,.1);
+      transform: translateY(-2px);
+    }
+    .c-card.sel1 { border-color: var(--red); background: rgba(255,95,95,.12); }
+    .c-card.sel2 { border-color: var(--blue); background: rgba(95,168,255,.12); }
+
+    .c-flag {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,.18);
+      flex-shrink: 0;
+    }
+    .c-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .c-name {
+      font-size: .67rem;
+      text-align: center;
+      color: #aab;
+      line-height: 1.25;
+    }
+
+    .kick-off {
+      margin-top: 24px;
+      padding: 15px 52px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--gold), #ff9000);
+      color: #000;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 24px rgba(255,208,0,.3);
+      transition: all .2s ease;
+    }
+    .kick-off:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(255,180,0,.5);
+    }
+    .kick-off:disabled { opacity: .25; cursor: not-allowed; }
+
+    /* ─── SCREEN 2 — GAME ─────────────────────────── */
+    #s-game {
+      background: radial-gradient(ellipse at center, #162a1c 0%, #071209 80%);
+      padding: 20px;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .scorebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 540px;
+      padding: 10px 20px;
+      background: rgba(0,0,0,.45);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 60px;
+      backdrop-filter: blur(8px);
+    }
+
+    .sb-team {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sb-team.right { flex-direction: row-reverse; }
+
+    .sb-flag {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,.25);
+      flex-shrink: 0;
+    }
+    .sb-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sb-name { font-size: .8rem; font-weight: 700; max-width: 90px; }
+
+    .sb-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .score-num {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 6px;
+      line-height: 1;
+    }
+    .timer-num {
+      font-size: .78rem;
+      color: #778;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #game-canvas {
+      border-radius: 50%;
+      box-shadow: 0 0 60px rgba(0,160,60,.2);
+      display: block;
+    }
+
+    /* Goal overlay */
+    .goal-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .goal-overlay.show { opacity: 1; }
+
+    .goal-text {
+      font-size: clamp(3rem, 10vw, 5.5rem);
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 40px rgba(255,215,0,.9), 0 0 80px rgba(255,140,0,.6);
+      letter-spacing: 3px;
+      text-align: center;
+    }
+    @keyframes goalBounce {
+      0%   { transform: scale(.3) rotate(-8deg); }
+      55%  { transform: scale(1.15) rotate(4deg); }
+      75%  { transform: scale(.95) rotate(-2deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+    .goal-overlay.show .goal-text { animation: goalBounce .55s cubic-bezier(.17,.67,.52,1.4) both; }
+
+    .scorer-name {
+      font-size: clamp(.9rem, 3vw, 1.3rem);
+      color: #fff;
+      text-align: center;
+      margin-top: 6px;
+      font-weight: 700;
+      opacity: .9;
+    }
+
+    /* ─── SCREEN 3 — RESULTS ──────────────────────── */
+    #s-results {
+      background: linear-gradient(160deg, #0a0f14 0%, #101a28 100%);
+      padding: 40px 20px;
+      justify-content: center;
+    }
+
+    .results-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 24px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .results-card { animation: slideUp .5s .1s ease both; }
+
+    .ft-label {
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #556;
+      margin-bottom: 28px;
+    }
+
+    .res-teams {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+    .res-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .res-flag {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(255,255,255,.15);
+    }
+    .res-flag img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .res-flag.champ { border-color: var(--gold); box-shadow: 0 0 24px rgba(255,215,0,.4); }
+    .res-team-name { font-size: .9rem; font-weight: 700; }
+
+    .res-vs { color: #333; font-size: 1.2rem; font-weight: 800; align-self: center; }
+
+    .res-score {
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 10px;
+      line-height: 1;
+      margin: 8px 0 16px;
+    }
+    .res-winner {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .res-winner .hl { color: var(--gold); }
+    .res-msg { font-size: .85rem; color: #778; margin-bottom: 28px; }
+
+    .play-again {
+      padding: 12px 36px;
+      font-size: .95rem;
+      font-weight: 700;
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255,255,255,.18);
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: all .2s ease;
+    }
+    .play-again:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(255,215,0,.06);
+    }
+
+    /* Confetti */
+    #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 300; overflow: hidden; }
+    .cf {
+      position: absolute;
+      top: -12px;
+      border-radius: 2px;
+      animation: cfFall linear forwards;
+    }
+    @keyframes cfFall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(600deg); opacity: 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .pick-layout { grid-template-columns: 1fr; }
+      .team-panel { flex-direction: row; min-height: auto; padding: 12px 16px; }
+      .vs-tag { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 1 — COUNTRY SELECTION
+═══════════════════════════════════════════════════════ -->
+<section id="s-pick" class="screen active">
+  <h1 class="page-title">⚽ World Cup 2026 Predictor</h1>
+  <p class="page-sub">Select two nations — then watch them battle it out!</p>
+
+  <div class="pick-layout">
+    <!-- Team 1 -->
+    <div class="team-panel t1">
+      <label>Team 1</label>
+      <div class="panel-flag" id="pf1">🏳</div>
+      <div class="panel-name" id="pn1">Choose a team</div>
+      <div class="vs-tag">— VS —</div>
+    </div>
+
+    <!-- Country Picker -->
+    <div class="picker-panel">
+      <div class="pick-instruction" id="pick-hint">Pick <strong>Team 1</strong></div>
+      <div class="search-wrap">
+        <svg width="14" height="14" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="search" id="search" placeholder="Search country…" autocomplete="off">
+      </div>
+      <div class="country-grid" id="country-grid"></div>
+    </div>
+
+    <!-- Team 2 -->
+    <div class="team-panel t2">
+      <label>Team 2</label>
+      <div class="panel-flag" id="pf2">🏳</div>
+      <div class="panel-name" id="pn2">Choose a team</div>
+    </div>
+  </div>
+
+  <button class="kick-off" id="kick-off-btn" disabled>⚽ Kick Off!</button>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 2 — GAME
+═══════════════════════════════════════════════════════ -->
+<section id="s-game" class="screen">
+  <div class="scorebar">
+    <div class="sb-team left" id="sb-left">
+      <div class="sb-flag"><img id="sb-img1" src="" alt=""></div>
+      <span class="sb-name" id="sb-n1"></span>
+    </div>
+    <div class="sb-center">
+      <div class="score-num" id="score-el">0 – 0</div>
+      <div class="timer-num" id="timer-el">00:00</div>
+    </div>
+    <div class="sb-team right" id="sb-right">
+      <div class="sb-flag"><img id="sb-img2" src="" alt=""></div>
+      <span class="sb-name" id="sb-n2"></span>
+    </div>
+  </div>
+
+  <canvas id="game-canvas" width="520" height="520"></canvas>
+
+  <div class="goal-overlay" id="goal-overlay">
+    <div>
+      <div class="goal-text" id="goal-text">⚽ GOAL!</div>
+      <div class="scorer-name" id="scorer-name"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCREEN 3 — RESULTS
+═══════════════════════════════════════════════════════ -->
+<section id="s-results" class="screen">
+  <div id="confetti"></div>
+  <div class="results-card">
+    <div class="ft-label">⏱ Full Time</div>
+    <div class="res-teams" id="res-teams"></div>
+    <div class="res-score" id="res-score"></div>
+    <div class="res-winner" id="res-winner"></div>
+    <div class="res-msg" id="res-msg"></div>
+    <button class="play-again" onclick="goToSelection()">↩ Play Again</button>
+  </div>
+</section>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════════════ */
+const COUNTRIES = [
+  { name: 'Argentina',    code: 'ar' },
+  { name: 'Australia',    code: 'au' },
+  { name: 'Belgium',      code: 'be' },
+  { name: 'Brazil',       code: 'br' },
+  { name: 'Cameroon',     code: 'cm' },
+  { name: 'Canada',       code: 'ca' },
+  { name: 'Chile',        code: 'cl' },
+  { name: 'Colombia',     code: 'co' },
+  { name: 'Costa Rica',   code: 'cr' },
+  { name: 'Croatia',      code: 'hr' },
+  { name: 'Denmark',      code: 'dk' },
+  { name: 'Ecuador',      code: 'ec' },
+  { name: 'England',      code: 'gb-eng' },
+  { name: 'France',       code: 'fr' },
+  { name: 'Germany',      code: 'de' },
+  { name: 'Ghana',        code: 'gh' },
+  { name: 'Iran',         code: 'ir' },
+  { name: 'Italy',        code: 'it' },
+  { name: 'Japan',        code: 'jp' },
+  { name: 'Mexico',       code: 'mx' },
+  { name: 'Morocco',      code: 'ma' },
+  { name: 'Netherlands',  code: 'nl' },
+  { name: 'New Zealand',  code: 'nz' },
+  { name: 'Nigeria',      code: 'ng' },
+  { name: 'Poland',       code: 'pl' },
+  { name: 'Portugal',     code: 'pt' },
+  { name: 'Qatar',        code: 'qa' },
+  { name: 'Saudi Arabia', code: 'sa' },
+  { name: 'Scotland',     code: 'gb-sct' },
+  { name: 'Senegal',      code: 'sn' },
+  { name: 'Serbia',       code: 'rs' },
+  { name: 'South Korea',  code: 'kr' },
+  { name: 'Spain',        code: 'es' },
+  { name: 'Switzerland',  code: 'ch' },
+  { name: 'Tunisia',      code: 'tn' },
+  { name: 'Turkey',       code: 'tr' },
+  { name: 'Ukraine',      code: 'ua' },
+  { name: 'USA',          code: 'us' },
+  { name: 'Uruguay',      code: 'uy' },
+  { name: 'Wales',        code: 'gb-wls' },
+].sort((a, b) => a.name.localeCompare(b.name));
+
+function flagSrc(code) { return `https://flagcdn.com/w80/${code}.png`; }
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════ */
+const G = {
+  team1: null, team2: null,
+  score1: 0,   score2: 0,
+  picking: 1,            // which team is being selected
+  running: false,
+  goalPaused: false,
+  goalTimer: 0,
+  elapsed: 0,            // real seconds
+  matchDuration: 70,     // real seconds = 90 game mins
+  raf: null,
+  lastTs: null,
+  halfDone: false,
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   PHYSICS CONSTANTS
+═══════════════════════════════════════════════════════════════ */
+const W = 520, H = 520;
+const CX = W / 2, CY = H / 2;
+const AR   = 210;   // arena radius
+const BR   = 26;    // ball radius
+const GAP  = 0.34;  // goal gap in radians (~19°)
+const GDEP = 50;    // goal depth outward in px
+const ROT  = 0.010; // goal rotation speed
+const SPD  = 4.2;   // steady marble speed (px/frame @60fps)
+const REST = 0.96;  // wall bounce energy retained
+
+let goalAngle = 0;
+let b1 = null, b2 = null;
+const img1 = new Image(); img1.crossOrigin = 'anonymous';
+const img2 = new Image(); img2.crossOrigin = 'anonymous';
+
+/* ── ball helpers ── */
+function mkBall(x, y, vx, vy) { return { x, y, vx, vy }; }
+
+function setSpeed(b, speed = SPD) {
+  const s = Math.hypot(b.vx, b.vy);
+  if (s < 0.001) {
+    const a = Math.random() * Math.PI * 2;
+    b.vx = Math.cos(a) * speed;
+    b.vy = Math.sin(a) * speed;
+  } else {
+    b.vx = (b.vx / s) * speed;
+    b.vy = (b.vy / s) * speed;
+  }
+}
+
+function resetBalls() {
+  const a1 = Math.random() * Math.PI * 2;
+  const a2 = a1 + Math.PI + (Math.random() - 0.5) * 1.4;
+  b1 = mkBall(CX - 75, CY + (Math.random() - 0.5) * 60, Math.cos(a1) * SPD, Math.sin(a1) * SPD);
+  b2 = mkBall(CX + 75, CY + (Math.random() - 0.5) * 60, Math.cos(a2) * SPD, Math.sin(a2) * SPD);
+}
+
+function moveBall(b, scale) {
+  b.x += b.vx * scale;
+  b.y += b.vy * scale;
+}
+
+// Returns true when ball scores through the goal gap
+function wallCheck(b) {
+  const dx = b.x - CX, dy = b.y - CY;
+  const dist = Math.hypot(dx, dy);
+  const maxR = AR - BR;
+  if (dist <= maxR) return false;
+
+  const nx = dx / dist, ny = dy / dist;
+  const ba = Math.atan2(dy, dx);
+  let diff = ba - goalAngle;
+  while (diff >  Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+
+  const outward = b.vx * nx + b.vy * ny;
+  if (Math.abs(diff) < GAP / 2 && outward > 0.25) return true;
+
+  // Elastic wall bounce — only when moving into the boundary
+  if (outward > 0) {
+    b.vx -= (1 + REST) * outward * nx;
+    b.vy -= (1 + REST) * outward * ny;
+    // Small random deflection on wall hit so paths stay varied
+    const speed = Math.hypot(b.vx, b.vy) || SPD;
+    const ang = Math.atan2(b.vy, b.vx) + (Math.random() - 0.5) * 0.14;
+    b.vx = Math.cos(ang) * speed;
+    b.vy = Math.sin(ang) * speed;
+  }
+
+  b.x = CX + nx * maxR;
+  b.y = CY + ny * maxR;
+  return false;
+}
+
+function ballCollide(a, b) {
+  let dx = b.x - a.x, dy = b.y - a.y;
+  let dist = Math.hypot(dx, dy);
+  const minD = BR * 2;
+  if (dist >= minD || dist === 0) return;
+
+  const nx = dx / dist, ny = dy / dist;
+  const overlap = minD - dist;
+  a.x -= nx * overlap * 0.5;
+  a.y -= ny * overlap * 0.5;
+  b.x += nx * overlap * 0.5;
+  b.y += ny * overlap * 0.5;
+
+  const rel = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+  if (rel <= 0) return;
+
+  a.vx -= rel * nx;
+  a.vy -= rel * ny;
+  b.vx += rel * nx;
+  b.vy += rel * ny;
+  setSpeed(a);
+  setSpeed(b);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CANVAS DRAWING
+═══════════════════════════════════════════════════════════════ */
+const canvas = document.getElementById('game-canvas');
+const ctx    = canvas.getContext('2d');
+
+function drawField() {
+  // Background behind arena
+  ctx.fillStyle = '#0b1e10';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grass stripes inside circle (subtle)
+  ctx.save();
+  ctx.beginPath(); ctx.arc(CX, CY, AR, 0, Math.PI*2); ctx.clip();
+  for (let i = 0; i < 9; i++) {
+    ctx.fillStyle = i%2===0 ? '#162e1a' : '#1b3820';
+    ctx.fillRect(i*(W/9), 0, W/9, H);
+  }
+  ctx.restore();
+}
+
+function drawArena() {
+  // White boundary arc with goal gap
+  ctx.beginPath();
+  ctx.arc(CX, CY, AR, goalAngle + GAP/2, goalAngle - GAP/2 + Math.PI*2);
+  ctx.strokeStyle = 'rgba(255,255,255,.75)';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Center dot
+  ctx.beginPath(); ctx.arc(CX, CY, 5, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.fill();
+
+  // Center dashed circle
+  ctx.beginPath(); ctx.arc(CX, CY, 55, 0, Math.PI*2);
+  ctx.setLineDash([5, 8]); ctx.strokeStyle = 'rgba(255,255,255,.08)';
+  ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawGoal() {
+  const p1a = goalAngle - GAP/2;
+  const p2a = goalAngle + GAP/2;
+  const p1x = CX + Math.cos(p1a)*AR, p1y = CY + Math.sin(p1a)*AR;
+  const p2x = CX + Math.cos(p2a)*AR, p2y = CY + Math.sin(p2a)*AR;
+  const outX = Math.cos(goalAngle), outY = Math.sin(goalAngle);
+  const c1x = p1x + outX*GDEP, c1y = p1y + outY*GDEP;
+  const c2x = p2x + outX*GDEP, c2y = p2y + outY*GDEP;
+
+  // Net fill
+  ctx.beginPath();
+  ctx.moveTo(p1x, p1y); ctx.lineTo(c1x, c1y);
+  ctx.lineTo(c2x, c2y); ctx.lineTo(p2x, p2y); ctx.closePath();
+  ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.fill();
+
+  // Crossbar & posts
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 8;
+  [[p1x,p1y,c1x,c1y],[p2x,p2y,c2x,c2y],[c1x,c1y,c2x,c2y]].forEach(([ax,ay,bx,by]) => {
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke();
+  });
+  ctx.shadowBlur = 0;
+
+  // Net lines
+  ctx.setLineDash([3, 5]); ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1;
+  for (let t = .2; t < 1; t += .2) {
+    const nx1 = p1x+(c1x-p1x)*t, ny1 = p1y+(c1y-p1y)*t;
+    const nx2 = p2x+(c2x-p2x)*t, ny2 = p2y+(c2y-p2y)*t;
+    ctx.beginPath(); ctx.moveTo(nx1,ny1); ctx.lineTo(nx2,ny2); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Post tips
+  [p1x,p1y,p2x,p2y].forEach((_,i,a) => {
+    if (i%2===0) {
+      ctx.beginPath(); ctx.arc(a[i],a[i+1],5,0,Math.PI*2);
+      ctx.fillStyle='#fff'; ctx.fill();
+    }
+  });
+}
+
+function drawBall(b, img, country, color) {
+  ctx.save();
+  ctx.beginPath(); ctx.arc(b.x, b.y, BR, 0, Math.PI*2);
+  // fallback fill
+  ctx.fillStyle = color + '55'; ctx.fill();
+  ctx.clip();
+  if (img.complete && img.naturalWidth > 0) {
+    try { ctx.drawImage(img, b.x-BR, b.y-BR, BR*2, BR*2); } catch(e) { /* CORS */ }
+  } else {
+    // Colored fallback with initials
+    ctx.fillStyle = color;
+    ctx.fillRect(b.x-BR, b.y-BR, BR*2, BR*2);
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${BR*.7}px Arial`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(country.code.slice(0,2).toUpperCase(), b.x, b.y);
+  }
+  ctx.restore();
+
+  // Ring
+  ctx.beginPath(); ctx.arc(b.x, b.y, BR, 0, Math.PI*2);
+  ctx.strokeStyle = color; ctx.lineWidth = 3;
+  ctx.shadowColor = color; ctx.shadowBlur = 14; ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+function drawScene() {
+  ctx.clearRect(0, 0, W, H);
+  drawField();
+  drawArena();
+  drawGoal();
+  if (b1) drawBall(b1, img1, G.team1, '#ff5f5f');
+  if (b2) drawBall(b2, img2, G.team2, '#5fa8ff');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GAME LOOP
+═══════════════════════════════════════════════════════════════ */
+function gameLoop(ts) {
+  if (!G.running) return;
+  if (!G.lastTs) G.lastTs = ts;
+  const dt = Math.min((ts - G.lastTs) / 1000, 0.05); // cap at 50ms
+  G.lastTs = ts;
+
+  if (G.goalPaused) {
+    G.goalTimer -= dt;
+    if (G.goalTimer <= 0) {
+      G.goalPaused = false;
+      hideGoalOverlay();
+      resetBalls();
+    }
+  } else {
+    G.elapsed += dt;
+
+    // Rotate goal post
+    goalAngle += ROT;
+
+    // Inertia-based physics (straight lines + collision response only)
+    const scale = dt * 60;
+    moveBall(b1, scale);
+    moveBall(b2, scale);
+    ballCollide(b1, b2);
+
+    if (wallCheck(b1)) { score(1); return; }
+    if (wallCheck(b2)) { score(2); return; }
+
+    ballCollide(b1, b2);
+    if (wallCheck(b1)) { score(1); return; }
+    if (wallCheck(b2)) { score(2); return; }
+
+    // Timer UI (90 game-mins over matchDuration real secs)
+    const gMin = Math.floor((G.elapsed / G.matchDuration) * 90);
+    const gSec = Math.floor(((G.elapsed / G.matchDuration) * 90 % 1) * 60);
+    document.getElementById('timer-el').textContent =
+      String(gMin).padStart(2,'0') + ':' + String(gSec).padStart(2,'0');
+
+    // Half time whistle
+    if (!G.halfDone && G.elapsed >= G.matchDuration / 2) {
+      G.halfDone = true;
+      flashMessage('Half Time! ⚽', 1800);
+    }
+
+    // Full time
+    if (G.elapsed >= G.matchDuration) {
+      fullTime(); return;
+    }
+  }
+
+  drawScene();
+  G.raf = requestAnimationFrame(gameLoop);
+}
+
+function score(team) {
+  if (team === 1) G.score1++; else G.score2++;
+  G.goalPaused = true;
+  G.goalTimer = 2.5;
+
+  document.getElementById('score-el').textContent = `${G.score1} – ${G.score2}`;
+  showGoalOverlay(team);
+
+  // Flash the canvas
+  ctx.fillStyle = team === 1 ? 'rgba(255,80,80,.35)' : 'rgba(80,150,255,.35)';
+  ctx.fillRect(0, 0, W, H);
+
+  drawScene();
+  G.raf = requestAnimationFrame(gameLoop);
+}
+
+function showGoalOverlay(team) {
+  const name = (team === 1 ? G.team1 : G.team2).name;
+  document.getElementById('goal-text').textContent = '⚽ GOAL!';
+  document.getElementById('scorer-name').textContent = name + ' scores!';
+  const ov = document.getElementById('goal-overlay');
+  ov.classList.remove('show');
+  void ov.offsetWidth; // reflow to restart animation
+  ov.classList.add('show');
+}
+
+function hideGoalOverlay() {
+  document.getElementById('goal-overlay').classList.remove('show');
+}
+
+function flashMessage(msg, ms) {
+  document.getElementById('goal-text').textContent = msg;
+  document.getElementById('scorer-name').textContent = '';
+  const ov = document.getElementById('goal-overlay');
+  ov.classList.add('show');
+  setTimeout(() => ov.classList.remove('show'), ms);
+}
+
+function fullTime() {
+  G.running = false;
+  cancelAnimationFrame(G.raf);
+  flashMessage('Full Time! 🏁', 1500);
+  setTimeout(showResults, 1800);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCREEN MANAGEMENT
+═══════════════════════════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SELECTION SCREEN
+═══════════════════════════════════════════════════════════════ */
+let filtered = [...COUNTRIES];
+
+function renderGrid() {
+  const grid = document.getElementById('country-grid');
+  grid.innerHTML = '';
+  filtered.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'c-card' +
+      (G.team1?.code===c.code ? ' sel1' : '') +
+      (G.team2?.code===c.code ? ' sel2' : '');
+    card.innerHTML = `
+      <div class="c-flag"><img src="${flagSrc(c.code)}" alt="${c.name}" loading="lazy"></div>
+      <div class="c-name">${c.name}</div>`;
+    card.addEventListener('click', () => pick(c));
+    grid.appendChild(card);
+  });
+}
+
+function pick(country) {
+  if (G.picking === 1) {
+    if (G.team2?.code === country.code) { G.team2 = null; updatePanel(2, null); }
+    G.team1 = country;
+    updatePanel(1, country);
+    G.picking = 2;
+  } else {
+    if (G.team1?.code === country.code) return; // can't pick same
+    G.team2 = country;
+    updatePanel(2, country);
+    G.picking = 1;
+  }
+  renderGrid();
+  updateHint();
+  document.getElementById('kick-off-btn').disabled = !(G.team1 && G.team2);
+}
+
+function updatePanel(n, country) {
+  const flagEl = document.getElementById(`pf${n}`);
+  const nameEl = document.getElementById(`pn${n}`);
+  if (country) {
+    flagEl.innerHTML = `<img src="${flagSrc(country.code)}" alt="${country.name}">`;
+    nameEl.textContent = country.name;
+  } else {
+    flagEl.textContent = '🏳';
+    nameEl.textContent = 'Choose a team';
+  }
+}
+
+function updateHint() {
+  const h = document.getElementById('pick-hint');
+  if (!G.team1) h.innerHTML = 'Pick <strong>Team 1</strong>';
+  else if (!G.team2) h.innerHTML = 'Pick <strong>Team 2</strong>';
+  else h.innerHTML = '<strong>Both selected – ready to kick off!</strong>';
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  const q = e.target.value.toLowerCase().trim();
+  filtered = q ? COUNTRIES.filter(c => c.name.toLowerCase().includes(q)) : [...COUNTRIES];
+  renderGrid();
+});
+
+document.getElementById('kick-off-btn').addEventListener('click', startGame);
+
+/* ═══════════════════════════════════════════════════════════════
+   GAME START
+═══════════════════════════════════════════════════════════════ */
+function startGame() {
+  showScreen('s-game');
+
+  // Scorebar
+  document.getElementById('sb-img1').src = flagSrc(G.team1.code);
+  document.getElementById('sb-n1').textContent = G.team1.name;
+  document.getElementById('sb-img2').src = flagSrc(G.team2.code);
+  document.getElementById('sb-n2').textContent = G.team2.name;
+
+  // Load canvas flag images
+  img1.src = flagSrc(G.team1.code);
+  img2.src = flagSrc(G.team2.code);
+
+  // Reset game state
+  G.score1 = G.score2 = 0;
+  G.elapsed = 0;
+  G.running = true;
+  G.goalPaused = false;
+  G.goalTimer = 0;
+  G.halfDone = false;
+  G.lastTs = null;
+  goalAngle = Math.random() * Math.PI * 2;
+
+  document.getElementById('score-el').textContent = '0 – 0';
+  document.getElementById('timer-el').textContent = '00:00';
+  hideGoalOverlay();
+
+  resetBalls();
+  cancelAnimationFrame(G.raf);
+  G.raf = requestAnimationFrame(gameLoop);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESULTS
+═══════════════════════════════════════════════════════════════ */
+function showResults() {
+  showScreen('s-results');
+  const { team1: t1, team2: t2, score1: s1, score2: s2 } = G;
+  const winner = s1 > s2 ? 1 : s2 > s1 ? 2 : 0;
+
+  document.getElementById('res-teams').innerHTML = `
+    <div class="res-team">
+      <div class="res-flag ${winner===1?'champ':''}">
+        <img src="${flagSrc(t1.code)}" alt="${t1.name}">
+      </div>
+      <div class="res-team-name">${t1.name}</div>
+      ${winner===1 ? '<div style="color:var(--gold);font-size:1.4rem">🏆</div>' : ''}
+    </div>
+    <div class="res-vs">VS</div>
+    <div class="res-team">
+      <div class="res-flag ${winner===2?'champ':''}">
+        <img src="${flagSrc(t2.code)}" alt="${t2.name}">
+      </div>
+      <div class="res-team-name">${t2.name}</div>
+      ${winner===2 ? '<div style="color:var(--gold);font-size:1.4rem">🏆</div>' : ''}
+    </div>`;
+
+  document.getElementById('res-score').textContent = `${s1}  –  ${s2}`;
+
+  if (winner === 0) {
+    document.getElementById('res-winner').innerHTML = `<span style="color:#9ab">It's a Draw!</span>`;
+    document.getElementById('res-msg').textContent = 'An evenly matched contest!';
+  } else {
+    const w = winner===1 ? t1 : t2;
+    document.getElementById('res-winner').innerHTML = `🏆 <span class="hl">${w.name}</span> Wins!`;
+    document.getElementById('res-msg').textContent = `Congratulations — the World Cup is theirs!`;
+    launchConfetti();
+  }
+}
+
+function launchConfetti() {
+  const box = document.getElementById('confetti');
+  box.innerHTML = '';
+  const colors = ['#ffd700','#ff5f5f','#5fa8ff','#52b788','#ff9c00','#e63946','#fff'];
+  for (let i = 0; i < 90; i++) {
+    const el = document.createElement('div');
+    el.className = 'cf';
+    const size = 7 + Math.random()*10;
+    el.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      border-radius:${Math.random()>.5?'50%':'2px'};
+      animation-duration:${2.5+Math.random()*3}s;
+      animation-delay:${Math.random()*2}s;`;
+    box.appendChild(el);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PLAY AGAIN
+═══════════════════════════════════════════════════════════════ */
+function goToSelection() {
+  G.team1 = G.team2 = null;
+  G.picking = 1;
+  G.running = false;
+  cancelAnimationFrame(G.raf);
+  updatePanel(1, null); updatePanel(2, null);
+  updateHint();
+  document.getElementById('kick-off-btn').disabled = true;
+  document.getElementById('search').value = '';
+  filtered = [...COUNTRIES];
+  renderGrid();
+  showScreen('s-pick');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+renderGrid();
+updateHint();
+</script>
+</body>
+</html>
+
