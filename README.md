@@ -25,9 +25,19 @@ Then visit [http://localhost:8080](http://localhost:8080).
 ## How it works
 
 1. **Pick your teams** — Choose two nations from 40 World Cup contenders. Search by name to find your team quickly.
+
+<img width="1274" height="754" alt="Screenshot 2026-07-15 at 10 01 48 pm" src="https://github.com/user-attachments/assets/5fdb5220-0d9a-4401-b252-2f2a3d34703e" />
+
 2. **Kick off** — Two flag balls bounce around a circular arena. A goal opening rotates around the perimeter.
+<img width="800" height="690" alt="Screenshot 2026-07-15 at 10 02 12 pm" src="https://github.com/user-attachments/assets/920aecb5-503d-4f91-b553-c1c7d0e3c75a" />
+
 3. **Watch the match** — Balls collide with each other and the walls. Score by passing through the goal gap. The match runs for 90 simulated minutes (~70 seconds real time).
+<img width="1071" height="704" alt="Screenshot 2026-07-15 at 10 07 47 pm" src="https://github.com/user-attachments/assets/220aae3d-7478-4e01-ad84-a0bd8f243659" />
+
+
 4. **See the result** — Full-time score, winner announcement, and confetti for the champion.
+<img width="1287" height="723" alt="Screenshot 2026-07-15 at 10 07 52 pm" src="https://github.com/user-attachments/assets/749b96ee-98bb-42c1-b550-6f7b822b99eb" />
+
 
 ## Features
 
